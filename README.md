@@ -17,6 +17,8 @@ python3 main.py
 - `LOG`: 부모가 먼저 나오는 전체 커밋 기록(DFS 기반)
 - `ANCESTORS <commit_hash>`: 부모 관계를 거슬러 올라가 모든 조상을 DFS로 검색
 - `PATH <commit1> <commit2>`: 부모·자식 연결을 무방향으로 탐색하는 최단 경로(BFS), 동률 사전순 최소
+- `SEARCH <keyword>`: 메시지 단어를 소문자 정규화한 역색인으로 조회
+- `SEARCH --author=<name>`: 작성자 역색인으로 조회(공백 포함 시 따옴표 사용)
 - `STATUS`: 현재 브랜치, HEAD, 총 커밋 수 확인 (학습 보조 명령)
 - 대소문자 구분 없는 명령, 따옴표로 감싼 공백 포함 인자, 기본 오류 처리
 
@@ -32,6 +34,8 @@ mini-git> STATUS
 mini-git> SWITCH main
 mini-git> PATH 00000001 00000002
 mini-git> ANCESTORS 00000002
+mini-git> SEARCH login
+mini-git> SEARCH --author=Alice
 mini-git> STATUS
 mini-git> exit
 ```
@@ -41,6 +45,7 @@ mini-git> exit
 - `commit.py`: Commit(hash, message, author, timestamp, parents)
 - `mini_git.py`: 저장소 상태, 브랜치 HEAD, 커밋 생성·관리
 - `main.py`: shlex 파싱과 대화형 REPL
+- `inverted_index.py`: 키워드·작성자 역색인(커밋 때 갱신)
 - `graph.py`: 부모 우선 DFS, BFS 최단 경로, 조상 DFS 탐색
 - 커밋은 `dict[hash, Commit]`로 보관해 평균 O(1)에 찾는다.
 - 각 커밋의 `parents`는 이전 커밋의 hash 목록이다. 새 커밋이 기존 커밋만 부모로 지정하므로 순환을 만들지 않는다.
@@ -50,8 +55,7 @@ mini-git> exit
 ## 아직 미구현 (후속 단계)
 
 - `LOG --sort-by=date|author`
-- `SEARCH`, `SEARCH --author=<name>`
-- 커밋 그래프 순회·BFS·위상 정렬·직접 구현 정렬·역색인
+- 날짜/작성자 정렬 알고리즘 직접 구현 (기존 BFS·DFS·역색인 구현됨)
 - 보너스: merge, diff, 정렬 성능 비교
 
 ## 테스트
