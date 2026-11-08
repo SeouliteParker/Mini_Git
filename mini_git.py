@@ -3,6 +3,7 @@ from datetime import datetime
 
 from commit import Commit
 from graph import parent_first, shortest_path, ancestors
+from inverted_index import InvertedIndex
 
 
 class MiniGit:
@@ -13,6 +14,7 @@ class MiniGit:
         self.branches: dict[str, str | None] = {}
         self.commits: dict[str, Commit] = {}
         self.next_commit_id = 1
+        self.index = InvertedIndex()
 
     def init(self, user_name: str) -> str:
         """빈 저장소를 초기화하고 main을 HEAD 브랜치로 설정한다."""
@@ -67,6 +69,7 @@ class MiniGit:
             parents=parents,
         )
         self.commits[commit_hash] = new_commit
+        self.index.add(commit_hash, message, self.author)
         self.branches[self.current_branch] = commit_hash
         return f"[{self.current_branch} {commit_hash}] {message}"
 
@@ -114,3 +117,17 @@ class MiniGit:
             return f"Unknown commit: {commit_hash}"
         result = ancestors(self.commits, commit_hash)
         return "Ancestors: " + ", ".join(result) if result else "No ancestors"
+
+    def search(self, query: str, by_author: bool = False) -> str:
+        """역색인에서 키워드 또는 작성자의 커밋 목록을 조회한다."""
+        if error := self._require_init():
+            return error
+        if not query.strip():
+            return "Invalid args"
+        hashes = self.index.author(query) if by_author else self.index.keyword(query)
+        if not hashes:
+            return "No commits found."
+        entries = [f"- {commit_hash}: {self.commits[commit_hash].message}"
+                   for commit_hash in hashes]
+        label = "commit" if len(hashes) == 1 else "commits"
+        return f"Found {len(hashes)} {label}:\n" + "\n".join(entries)
