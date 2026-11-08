@@ -83,6 +83,34 @@ class MiniGitTests(unittest.TestCase):
         }
         self.assertEqual(execute(self.git, "PATH 4 5"), "Path: 4 -> 2 -> 5")
 
+    def test_ancestors_linear_and_branch(self):
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "Initial"')
+        execute(self.git, 'COMMIT "Second"')
+        execute(self.git, 'COMMIT "Third"')
+        self.assertEqual(execute(self.git, "ANCESTORS 00000003"),
+                         "Ancestors: 00000001, 00000002")
+        self.assertEqual(execute(self.git, "ANCESTORS 00000001"),
+                         "No ancestors")
+        self.assertEqual(execute(self.git, "ANCESTORS ffffffff"),
+                         "Unknown commit: ffffffff")
+        self.assertEqual(execute(self.git, "ANCESTORS"), "Invalid args")
+
+    def test_ancestors_multiple_parents_deduplicated(self):
+        from commit import Commit
+        from datetime import datetime
+        execute(self.git, "INIT Alice")
+        t = datetime.now()
+        self.git.commits = {
+            key: Commit(key, key, "Alice", t, parents)
+            for key, parents in (
+                ("1", []), ("2", ["1"]), ("3", ["1"]),
+                ("4", ["2", "3"])
+            )
+        }
+        self.assertEqual(execute(self.git, "ANCESTORS 4"),
+                         "Ancestors: 1, 2, 3")
+
     def test_error_messages(self):
         self.assertEqual(execute(self.git, "INIT"), "Invalid args")
         execute(self.git, "INIT Alice")
