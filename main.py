@@ -23,6 +23,8 @@ def execute(git: MiniGit, line: str) -> str:
         return git.switch(args[1]) if len(args) == 2 else "Invalid args"
     if command == "COMMIT":
         return git.commit(args[1]) if len(args) == 2 else "Invalid args"
+    if command == "ANCESTORS":
+        return git.ancestors(args[1]) if len(args) == 2 else "Invalid args"
     if command == "PATH":
         return git.path(args[1], args[2]) if len(args) == 3 else "Invalid args"
     if command == "LOG":
