@@ -26,6 +26,7 @@ class MiniGit:
         self.branches = {"main": None}
         self.commits = {}
         self.next_commit_id = 1
+        self.index = InvertedIndex()
         return f"Initialized repository.\nCurrent branch: main\nCurrent user: {user_name}"
 
     def _require_init(self) -> str | None:
