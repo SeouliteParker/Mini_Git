@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from commit import Commit
-from graph import parent_first
+from graph import parent_first, shortest_path
 
 
 class MiniGit:
@@ -92,3 +92,16 @@ class MiniGit:
                 f"Parents: {parents}\n{commit.message}"
             )
         return "\n\n".join(rows)
+
+
+    def path(self, first: str, second: str) -> str:
+        """두 커밋 간 최단 경로를 출력한다."""
+        if error := self._require_init():
+            return error
+        for commit_hash in (first, second):
+            if commit_hash not in self.commits:
+                return f"Unknown commit: {commit_hash}"
+        result = shortest_path(self.commits, first, second)
+        if result is None:
+            return "No path"
+        return "Path: " + " -> ".join(result)
