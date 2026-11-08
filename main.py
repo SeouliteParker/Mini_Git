@@ -23,6 +23,18 @@ def execute(git: MiniGit, line: str) -> str:
         return git.switch(args[1]) if len(args) == 2 else "Invalid args"
     if command == "COMMIT":
         return git.commit(args[1]) if len(args) == 2 else "Invalid args"
+    if command == "SEARCH":
+        if len(args) != 2:
+            return "Invalid args"
+        if args[1].startswith("--author="):
+            author = args[1][len("--author="):]
+            return git.search(author, by_author=True) if author.strip() else "Invalid args"
+        if args[1].startswith("--"):
+            return "Invalid args"
+        # 메시지를 공백 기준으로 분리해 색인하므로 단일 키워드만 허용한다.
+        if len(args[1].split()) != 1:
+            return "Invalid args"
+        return git.search(args[1])
     if command == "ANCESTORS":
         return git.ancestors(args[1]) if len(args) == 2 else "Invalid args"
     if command == "PATH":
