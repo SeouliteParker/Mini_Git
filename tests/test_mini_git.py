@@ -111,6 +111,40 @@ class MiniGitTests(unittest.TestCase):
         self.assertEqual(execute(self.git, "ANCESTORS 4"),
                          "Ancestors: 1, 2, 3")
 
+    def test_search_keyword_case_and_duplicate(self):
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "Login login feature"')
+        execute(self.git, 'COMMIT "Fix payment"')
+        execute(self.git, 'COMMIT "Improve LOGIN"')
+        result = execute(self.git, "SEARCH login")
+        self.assertIn("Found 2 commits:", result)
+        self.assertIn("00000001", result)
+        self.assertIn("00000003", result)
+        self.assertNotIn("00000002", result)
+        self.assertEqual(execute(self.git, "SEARCH LOGIN"), result)
+
+    def test_search_author_and_missing(self):
+        execute(self.git, 'INIT "Alice Smith"')
+        execute(self.git, 'COMMIT "Initial commit"')
+        execute(self.git, 'COMMIT "Add feature"')
+        result = execute(self.git, 'SEARCH --author="Alice Smith"')
+        self.assertIn("Found 2 commits:", result)
+        self.assertIn("00000001", result)
+        self.assertIn("00000002", result)
+        self.assertEqual(execute(self.git, "SEARCH --author=Bob"), "No commits found.")
+        self.assertEqual(execute(self.git, "SEARCH unknown"), "No commits found.")
+        self.assertEqual(execute(self.git, "SEARCH --author="), "Invalid args")
+        self.assertEqual(execute(self.git, "SEARCH"), "Invalid args")
+
+    def test_search_index_reset_on_init(self):
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "Old login"')
+        execute(self.git, "INIT Bob")
+        self.assertEqual(execute(self.git, "SEARCH login"), "No commits found.")
+        execute(self.git, 'COMMIT "New login"')
+        self.assertIn("00000001", execute(self.git, "SEARCH login"))
+        self.assertEqual(execute(self.git, "SEARCH --author=Alice"), "No commits found.")
+
     def test_error_messages(self):
         self.assertEqual(execute(self.git, "INIT"), "Invalid args")
         execute(self.git, "INIT Alice")
