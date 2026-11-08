@@ -49,6 +49,40 @@ class MiniGitTests(unittest.TestCase):
         self.assertEqual(execute(self.git, "LOG"), "No commits.")
         self.assertEqual(execute(self.git, "LOG extra"), "Invalid args")
 
+    def test_path_between_branches(self):
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "Initial"')
+        execute(self.git, "BRANCH feature")
+        execute(self.git, "SWITCH feature")
+        execute(self.git, 'COMMIT "Login"')
+        execute(self.git, "SWITCH main")
+        execute(self.git, 'COMMIT "Payment"')
+        execute(self.git, 'COMMIT "Extra"')
+        self.assertEqual(
+            execute(self.git, "PATH 00000002 00000004"),
+            "Path: 00000002 -> 00000001 -> 00000003 -> 00000004"
+        )
+        self.assertEqual(execute(self.git, "PATH 00000002 00000002"),
+                         "Path: 00000002")
+        self.assertEqual(execute(self.git, "PATH 00000002 ffffffff"),
+                         "Unknown commit: ffffffff")
+        self.assertEqual(execute(self.git, "PATH 00000002"), "Invalid args")
+
+    def test_path_lexicographic_tie(self):
+        """동일 최단 거리의 경로는 첫 분기에서 작은 해시를 택한다."""
+        from commit import Commit
+        from datetime import datetime
+        execute(self.git, "INIT Alice")
+        t = datetime.now()
+        self.git.commits = {
+            key: Commit(key, key, "Alice", t, parents)
+            for key, parents in (
+                ("1", []), ("2", ["1"]), ("3", ["1"]),
+                ("4", ["2", "3"]), ("5", ["2", "3"])
+            )
+        }
+        self.assertEqual(execute(self.git, "PATH 4 5"), "Path: 4 -> 2 -> 5")
+
     def test_error_messages(self):
         self.assertEqual(execute(self.git, "INIT"), "Invalid args")
         execute(self.git, "INIT Alice")
