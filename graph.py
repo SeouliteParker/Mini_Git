@@ -65,3 +65,29 @@ def shortest_path(commits: dict[str, Commit], start: str, end: str) -> list[str]
         current = min(options)
         path.append(current)
     return path
+
+
+def ancestors(commits: dict[str, Commit], commit_hash: str) -> list[str]:
+    """부모 방향으로 DFS를 수행하여 모든 조상을 중복 없이 찾는다.
+
+    출발 커밋 자신은 결과에 포함하지 않으며 조상은 hash 오름차순으로 출력한다.
+    """
+    visited: set[str] = set()
+    stack = list(commits[commit_hash].parents)
+    while stack:
+        parent = stack.pop()
+        if parent in visited:
+            continue
+        visited.add(parent)
+        if parent in commits:
+            stack.extend(commits[parent].parents)
+    # 정렬은 표준 정렬 API 없이 삽입 정렬로 처리한다.
+    ordered: list[str] = []
+    for item in visited:
+        pos = len(ordered)
+        ordered.append(item)
+        while pos > 0 and ordered[pos - 1] > item:
+            ordered[pos] = ordered[pos - 1]
+            pos -= 1
+        ordered[pos] = item
+    return ordered
