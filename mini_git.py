@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from commit import Commit
+from graph import parent_first
 
 
 class MiniGit:
@@ -75,3 +76,19 @@ class MiniGit:
             return error
         head = self.branches[self.current_branch] or "(no commits)"
         return f"Branch: {self.current_branch}\nHEAD: {head}\nCommits: {len(self.commits)}"
+
+    def log(self) -> str:
+        """부모 커밋을 자식 커밋보다 먼저 출력한다."""
+        if error := self._require_init():
+            return error
+        if not self.commits:
+            return "No commits."
+        rows = []
+        for commit in parent_first(self.commits):
+            date = commit.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            parents = ", ".join(commit.parents) if commit.parents else "(root)"
+            rows.append(
+                f"commit {commit.hash} ({commit.author}, {date})\n"
+                f"Parents: {parents}\n{commit.message}"
+            )
+        return "\n\n".join(rows)
