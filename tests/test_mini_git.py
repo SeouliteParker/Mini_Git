@@ -164,8 +164,8 @@ class MiniGitTests(unittest.TestCase):
             ("LOG --sort-by=author", ["00000002", "00000003", "00000001"]),
         ):
             output = execute(self.git, command)
-            found = [part.split(" (")[0].split("commit ")[1]
-                     for part in output.split("\\n\\n")]
+            found = [line.split(" (")[0].removeprefix("commit ")
+                     for line in output.splitlines() if line.startswith("commit ")]
             self.assertEqual(found, expected)
         self.assertEqual(execute(self.git, "LOG --sort-by=message"), "Invalid args")
         self.assertEqual(execute(self.git, "LOG --sort-by=date extra"), "Invalid args")
