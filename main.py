@@ -23,6 +23,8 @@ def execute(git: MiniGit, line: str) -> str:
         return git.switch(args[1]) if len(args) == 2 else "Invalid args"
     if command == "COMMIT":
         return git.commit(args[1]) if len(args) == 2 else "Invalid args"
+    if command == "LOG":
+        return git.log() if len(args) == 1 else "Invalid args"
     if command == "STATUS":
         return git.status() if len(args) == 1 else "Invalid args"
     return f"Unknown command: {args[0]}"
