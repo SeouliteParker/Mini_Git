@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from commit import Commit
-from graph import parent_first, shortest_path
+from graph import parent_first, shortest_path, ancestors
 
 
 class MiniGit:
@@ -105,3 +105,12 @@ class MiniGit:
         if result is None:
             return "No path"
         return "Path: " + " -> ".join(result)
+
+    def ancestors(self, commit_hash: str) -> str:
+        """지정한 커밋의 조상 목록을 출력한다."""
+        if error := self._require_init():
+            return error
+        if commit_hash not in self.commits:
+            return f"Unknown commit: {commit_hash}"
+        result = ancestors(self.commits, commit_hash)
+        return "Ancestors: " + ", ".join(result) if result else "No ancestors"
