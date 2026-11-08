@@ -145,6 +145,40 @@ class MiniGitTests(unittest.TestCase):
         self.assertIn("00000001", execute(self.git, "SEARCH login"))
         self.assertEqual(execute(self.git, "SEARCH --author=Alice"), "No commits found.")
 
+    def test_log_sort_by_date_and_author(self):
+        from datetime import datetime, timedelta, timezone
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "First"')
+        execute(self.git, 'COMMIT "Second"')
+        execute(self.git, 'COMMIT "Third"')
+        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        self.git.commits["00000001"].timestamp = base + timedelta(days=2)
+        self.git.commits["00000002"].timestamp = base
+        self.git.commits["00000003"].timestamp = base + timedelta(days=1)
+        self.git.commits["00000001"].author = "Zoe"
+        self.git.commits["00000002"].author = "alice"
+        self.git.commits["00000003"].author = "Bob"
+        for command, expected in (
+            ("LOG", ["00000001", "00000002", "00000003"]),
+            ("LOG --sort-by=date", ["00000002", "00000003", "00000001"]),
+            ("LOG --sort-by=author", ["00000002", "00000003", "00000001"]),
+        ):
+            output = execute(self.git, command)
+            found = [part.split(" (")[0].split("commit ")[1]
+                     for part in output.split("\\n\\n")]
+            self.assertEqual(found, expected)
+        self.assertEqual(execute(self.git, "LOG --sort-by=message"), "Invalid args")
+        self.assertEqual(execute(self.git, "LOG --sort-by=date extra"), "Invalid args")
+
+    def test_merge_sort_stable_and_empty(self):
+        from sorting import merge_sort
+        self.assertEqual(merge_sort([], key=lambda x: (x,)), [])
+        self.assertEqual(merge_sort([3, 1, 2, 1], key=lambda x: (x,)),
+                         [1, 1, 2, 3])
+        items = [("a", 2), ("b", 1), ("c", 2)]
+        self.assertEqual(merge_sort(items, key=lambda x: (x[1],)),
+                         [("b", 1), ("a", 2), ("c", 2)])
+
     def test_error_messages(self):
         self.assertEqual(execute(self.git, "INIT"), "Invalid args")
         execute(self.git, "INIT Alice")
