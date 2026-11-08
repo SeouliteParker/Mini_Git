@@ -4,6 +4,7 @@ from datetime import datetime
 from commit import Commit
 from graph import parent_first, shortest_path, ancestors
 from inverted_index import InvertedIndex
+from sorting import merge_sort
 
 
 class MiniGit:
@@ -81,14 +82,21 @@ class MiniGit:
         head = self.branches[self.current_branch] or "(no commits)"
         return f"Branch: {self.current_branch}\nHEAD: {head}\nCommits: {len(self.commits)}"
 
-    def log(self) -> str:
-        """부모 커밋을 자식 커밋보다 먼저 출력한다."""
+    def log(self, sort_by: str | None = None) -> str:
+        """기본 LOG는 부모 우선, 옵션 지정 시 지정 기준 오름차순."""
         if error := self._require_init():
             return error
         if not self.commits:
             return "No commits."
+        commits = parent_first(self.commits)
+        if sort_by == "date":
+            commits = merge_sort(commits, key=lambda c: (c.timestamp, c.hash))
+        elif sort_by == "author":
+            commits = merge_sort(commits, key=lambda c: (c.author.lower(), c.hash))
+        elif sort_by is not None:
+            return "Invalid args"
         rows = []
-        for commit in parent_first(self.commits):
+        for commit in commits:
             date = commit.timestamp.strftime("%Y-%m-%d %H:%M:%S")
             parents = ", ".join(commit.parents) if commit.parents else "(root)"
             rows.append(
