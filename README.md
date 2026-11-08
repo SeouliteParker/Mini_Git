@@ -8,13 +8,14 @@ Python 3.10+로 작성한 **학습용 CLI 기반 Mini Git** 프로젝트야. 실
 python3 main.py
 ```
 
-## 1~2단계 구현 진행
+## 필수 기능 구현 현황
 
 - `INIT <user_name>`: 저장소 초기화, main 브랜치 및 작성자 설정
 - `COMMIT "<message>"`: 고유 커밋 해시 생성, 부모 커밋 연결, 브랜치 HEAD 갱신
 - `BRANCH <branch_name>`: 현재 HEAD를 가리키는 새 브랜치 생성
 - `SWITCH <branch_name>`: 현재 브랜치 전환
 - `LOG`: 부모가 먼저 나오는 전체 커밋 기록(DFS 기반)
+- `LOG --sort-by=date|author`: 병합 정렬로 날짜 또는 작성자 이름 오름차순 출력(동률 시 hash 사용)
 - `ANCESTORS <commit_hash>`: 부모 관계를 거슬러 올라가 모든 조상을 DFS로 검색
 - `PATH <commit1> <commit2>`: 부모·자식 연결을 무방향으로 탐색하는 최단 경로(BFS), 동률 사전순 최소
 - `SEARCH <keyword>`: 메시지 단어를 소문자 정규화한 역색인으로 조회
@@ -36,6 +37,8 @@ mini-git> PATH 00000001 00000002
 mini-git> ANCESTORS 00000002
 mini-git> SEARCH login
 mini-git> SEARCH --author=Alice
+mini-git> LOG --sort-by=date
+mini-git> LOG --sort-by=author
 mini-git> STATUS
 mini-git> exit
 ```
@@ -47,6 +50,7 @@ mini-git> exit
 - `main.py`: shlex 파싱과 대화형 REPL
 - `inverted_index.py`: 키워드·작성자 역색인(커밋 때 갱신)
 - `graph.py`: 부모 우선 DFS, BFS 최단 경로, 조상 DFS 탐색
+- `sorting.py`: Python 내장 정렬 API 없이 직접 구현한 안정 병합 정렬
 - 커밋은 `dict[hash, Commit]`로 보관해 평균 O(1)에 찾는다.
 - 각 커밋의 `parents`는 이전 커밋의 hash 목록이다. 새 커밋이 기존 커밋만 부모로 지정하므로 순환을 만들지 않는다.
 - 해시는 세션 내 증가하는 카운터를 8자리 16진수로 변환한다. **실제 Git의 SHA 기반 콘텐츠 해시와 다른 학습용 식별자**이다.
@@ -54,8 +58,6 @@ mini-git> exit
 
 ## 아직 미구현 (후속 단계)
 
-- `LOG --sort-by=date|author`
-- 날짜/작성자 정렬 알고리즘 직접 구현 (기존 BFS·DFS·역색인 구현됨)
 - 보너스: merge, diff, 정렬 성능 비교
 
 ## 테스트
