@@ -30,6 +30,25 @@ class MiniGitTests(unittest.TestCase):
         self.assertEqual(self.git.branches["feature"], "00000002")
         self.assertEqual(self.git.branches["main"], "00000001")
 
+    def test_log_parent_before_children(self):
+        execute(self.git, "INIT Alice")
+        execute(self.git, 'COMMIT "Initial commit"')
+        execute(self.git, "BRANCH feature")
+        execute(self.git, "SWITCH feature")
+        execute(self.git, 'COMMIT "Add login feature"')
+        execute(self.git, "SWITCH main")
+        execute(self.git, 'COMMIT "Add payment feature"')
+        output = execute(self.git, "LOG")
+        self.assertLess(output.index("commit 00000001"), output.index("commit 00000002"))
+        self.assertLess(output.index("commit 00000001"), output.index("commit 00000003"))
+        self.assertIn("Parents: 00000001", output)
+
+    def test_log_empty_and_invalid_args(self):
+        self.assertIn("not initialized", execute(self.git, "LOG"))
+        execute(self.git, "INIT Alice")
+        self.assertEqual(execute(self.git, "LOG"), "No commits.")
+        self.assertEqual(execute(self.git, "LOG extra"), "Invalid args")
+
     def test_error_messages(self):
         self.assertEqual(execute(self.git, "INIT"), "Invalid args")
         execute(self.git, "INIT Alice")
