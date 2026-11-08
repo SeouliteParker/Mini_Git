@@ -40,7 +40,11 @@ def execute(git: MiniGit, line: str) -> str:
     if command == "PATH":
         return git.path(args[1], args[2]) if len(args) == 3 else "Invalid args"
     if command == "LOG":
-        return git.log() if len(args) == 1 else "Invalid args"
+        if len(args) == 1:
+            return git.log()
+        if len(args) == 2 and args[1] in ("--sort-by=date", "--sort-by=author"):
+            return git.log(sort_by=args[1][len("--sort-by="):])
+        return "Invalid args"
     if command == "STATUS":
         return git.status() if len(args) == 1 else "Invalid args"
     return f"Unknown command: {args[0]}"
